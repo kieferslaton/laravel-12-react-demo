@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -9,47 +10,26 @@ import AppLayout from '@/layouts/app-layout';
 interface Todo {
     id: number;
     title: string;
-    dueDate: Date | undefined;
+    due_date: Date | undefined;
     completed: boolean;
 }
 
-export default function Todos() {
-    const [todos, setTodos] = useState<Todo[]>([
-        {
-            id: 1,
-            title: 'Learn React',
-            dueDate: new Date('2025-01-16'),
-            completed: false,
-        },
-        {
-            id: 2,
-            title: 'Build a Todo App',
-            dueDate: undefined,
-            completed: false,
-        },
-        {
-            id: 3,
-            title: 'Deploy to Production',
-            dueDate: undefined,
-            completed: false,
-        },
-    ]);
+export default function Todos({ todos }) {
     const [newTodo, setNewTodo] = useState('');
     const [newDueDate, setNewDueDate] = useState<Date | undefined>(undefined);
 
     const addTodo = () => {
         if (!newTodo.trim()) return;
-        setTodos([
-            ...todos,
-            {
-                id: todos.length + 1,
-                title: newTodo,
-                dueDate: newDueDate,
-                completed: false,
-            },
-        ]);
+        router.post('/todos', {
+            title: newTodo,
+            due_date: newDueDate,
+        });
         setNewTodo('');
         setNewDueDate(undefined);
+    };
+
+    const markTodoComplete = (id: number, completed: boolean) => {
+        router.patch(`/todos/${id}`, { completed });
     };
 
     return (
@@ -89,22 +69,12 @@ export default function Todos() {
                                     <span className="flex items-center gap-4">
                                         <Checkbox
                                             checked={todo.completed}
-                                            onCheckedChange={(
-                                                checked: boolean,
-                                            ) => {
-                                                const updatedTodos = todos.map(
-                                                    (t) =>
-                                                        t.id === todo.id
-                                                            ? {
-                                                                  ...t,
-                                                                  completed:
-                                                                      checked ||
-                                                                      false,
-                                                              }
-                                                            : t,
-                                                );
-                                                setTodos(updatedTodos);
-                                            }}
+                                            onCheckedChange={(checked) =>
+                                                markTodoComplete(
+                                                    todo.id,
+                                                    Boolean(checked),
+                                                )
+                                            }
                                         />
                                         <span
                                             className={
@@ -116,10 +86,9 @@ export default function Todos() {
                                             {todo.title}
                                         </span>
                                     </span>
-                                    {todo.dueDate && (
+                                    {todo.due_date && (
                                         <span className="text-sm text-muted-foreground">
-                                            Due:{' '}
-                                            {todo.dueDate.toLocaleDateString()}
+                                            Due: {todo.due_date}
                                         </span>
                                     )}
                                 </li>
