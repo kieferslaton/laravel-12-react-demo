@@ -8,12 +8,26 @@ use Inertia\Inertia;
 
 class TodoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
+        $query = $user->todos();
+
+        if ($request->filled('search')) {
+            $query->search($request->input('search'));
+        }
+
+        if ($request->boolean('incomplete_only')) {
+            $query->incomplete();
+        }
+
         return Inertia::render('todos/index', [
-            'todos' => $user->todos()->get(),
+            'todos' => $query->get(),
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'incomplete_only' => $request->boolean('incomplete_only'),
+            ],
         ]);
     }
 
